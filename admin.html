@@ -26,6 +26,9 @@
   .state-used { color: var(--cream); }
   .state-waiting, .state-opened { color: var(--muted); }
   .state-expired { color: var(--error); }
+  .btn-ghost { background: transparent; color: var(--cream); }
+  .btn-ghost:hover { background: var(--cream); color: var(--black); opacity: 1; }
+  td .link { font-size: 13px; }
   section + section { margin-top: 56px; }
   @media (max-width: 760px) { .row { grid-template-columns: 1fr; gap: 0; } table { font-size: 13px; } .hide-sm { display: none; } }
 </style>
@@ -55,14 +58,15 @@
         <div class="result" id="result">
           <p class="hint">Their link</p>
           <p class="url" id="url"></p>
-          <div class="actions" style="margin-top:0"><button class="btn" id="copyurl" type="button">Copy link</button><button class="link" id="copymsg" type="button">Copy link with message</button><span class="hint" id="copied" style="margin:0"></span></div>
+          <div class="actions" style="margin-top:0"><button class="btn" id="sendmail" type="button">Email it to them</button><button class="btn btn-ghost" id="copyurl" type="button">Copy link</button><button class="link" id="copymsg" type="button">Copy link with message</button><span class="hint" id="copied" style="margin:0"></span></div>
+          <p class="error" id="senderr" role="alert"></p>
           <p class="hint" style="margin-top:22px">Message</p>
           <p class="message" id="msg"></p>
         </div>
       </section>
       <section class="screen">
         <h2>Recent links</h2>
-        <table><thead><tr><th>Company</th><th class="hide-sm">Email</th><th>Created</th><th>Status</th></tr></thead><tbody id="list"></tbody></table>
+        <table><thead><tr><th>Company</th><th class="hide-sm">Email</th><th>Created</th><th>Status</th><th></th></tr></thead><tbody id="list"></tbody></table>
       </section>
     </div>
   </div>
@@ -82,9 +86,12 @@
     return post({ action: "list", admin_key: key }).then(function (j) {
       if (!j.ok) throw new Error("unauthorized");
       $("list").innerHTML = j.invites.map(function (i) {
-        var state = i.used_at ? ["used", "Submitted " + fmt(i.used_at)] : new Date(i.expires_at) < new Date() ? ["expired", "Expired"] : i.opened_at ? ["opened", "Opened, not sent"] : ["waiting", "Not opened yet"];
-        return "<tr><td>" + esc(i.company || "No name") + "</td><td class=\"hide-sm\">" + esc(i.email) + "</td><td>" + fmt(i.created_at) + "</td><td class=\"state-" + state[0] + "\">" + state[1] + "</td></tr>";
-      }).join("") || "<tr><td colspan=\"4\" class=\"muted\">No links yet. Create the first one above.</td></tr>";
+        var expired = new Date(i.expires_at) < new Date();
+        var state = i.used_at ? ["used", "Submitted " + fmt(i.used_at)] : expired ? ["expired", "Expired"] : i.opened_at ? ["opened", "Opened, not submitted"] : ["waiting", "Not opened yet"];
+        var extra = !i.used_at && !expired ? [i.sent_at ? "emailed " + fmt(i.sent_at) : "", i.reminded_at ? "reminded " + fmt(i.reminded_at) : ""].filter(Boolean).join(", ") : "";
+        var action = !i.used_at && !expired && i.email && !i.sent_at ? "<button class=\"link\" type=\"button\" data-send=\"" + esc(i.token) + "\">Email link</button>" : "";
+        return "<tr><td>" + esc(i.company || "No name") + "</td><td class=\"hide-sm\">" + esc(i.email) + "</td><td>" + fmt(i.created_at) + "</td><td class=\"state-" + state[0] + "\">" + state[1] + (extra ? "<br><span class=\"muted\">" + extra + "</span>" : "") + "</td><td>" + action + "</td></tr>";
+      }).join("") || "<tr><td colspan=\"5\" class=\"muted\">No links yet. Create the first one above.</td></tr>";
     });
   }
   function unlock() {
@@ -98,6 +105,26 @@
   $("key").addEventListener("keydown", function (e) { if (e.key === "Enter") unlock(); });
   if (key) unlock();
 
+  var current = { token: "", email: "" };
+  function sendLink(token) {
+    return post({ action: "send", admin_key: key, token: token }).then(function (j) {
+      if (j.ok) return "Sent";
+      throw new Error({ no_email: "Add an email to send it.", used: "Already submitted.", delivery: "Couldn't send right now. Try again in a minute." }[j.reason] || "Couldn't send. Try again.");
+    });
+  }
+  $("list").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-send]"); if (!b) return;
+    b.disabled = true; b.textContent = "Sending";
+    sendLink(b.getAttribute("data-send")).then(load).catch(function (err) { b.disabled = false; b.textContent = "Email link"; alertless(err.message); });
+  });
+  function alertless(m) { $("senderr").textContent = m; $("result").classList.add("is-on"); }
+  $("sendmail").addEventListener("click", function () {
+    var b = $("sendmail"); $("senderr").textContent = "";
+    b.disabled = true; b.textContent = "Sending";
+    sendLink(current.token).then(function () { b.textContent = "Sent to " + current.email; load(); })
+      .catch(function (err) { b.disabled = false; b.textContent = "Email it to them"; $("senderr").textContent = err.message; });
+  });
+
   $("create").addEventListener("click", function () {
     var btn = $("create"); btn.disabled = true; $("createerr").textContent = "";
     post({ action: "create", admin_key: key, company: $("company").value, first_name: $("first_name").value, email: $("email").value })
@@ -106,6 +133,8 @@
         if (!j.ok) { $("createerr").textContent = "Couldn't create the link. Try again."; return; }
         var url = base + "?t=" + j.token;
         var name = $("first_name").value.trim();
+        current = { token: j.token, email: $("email").value.trim() };
+        var sb = $("sendmail"); sb.hidden = !current.email; sb.disabled = false; sb.textContent = "Email it to " + (name || "them"); $("senderr").textContent = "";
         $("url").textContent = url;
         $("msg").textContent = "Hey" + (name ? " " + name : "") + ",\n\nSo happy to be starting this together. Here's your personal welcome page, it takes about two minutes and sets everything up on our side:\n\n" + url + "\n\nOnce you're done you can book our kickoff call right there.\n\nTalk soon,\nTomás";
         $("result").classList.add("is-on");
