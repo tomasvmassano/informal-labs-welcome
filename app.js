@@ -56,7 +56,7 @@
     current = i;
     var s = steps[i];
     setProgress(((i + 1) / (steps.length + 1)) * 100);
-    var html = "<h2>" + esc(s.title) + "</h2>";
+    var html = '<p class="count">' + (i + 1) + " of " + steps.length + "</p><h2>" + esc(s.title) + "</h2>";
     if (s.hint) html += '<p class="hint">' + esc(s.hint) + "</p>";
     s.fields.forEach(function (f) {
       var id = "f_" + f.key;
@@ -156,13 +156,6 @@
     if (current === -1 && document.getElementById("start")) { e.preventDefault(); go(0); return; }
     if (document.getElementById("next") && !document.getElementById("next").disabled) { e.preventDefault(); next(); }
   });
-
-  var video = document.getElementById("bg");
-  if (video) {
-    video.addEventListener("canplay", function () { video.classList.add("is-ready"); });
-    var srcs = video.querySelectorAll("source");
-    if (srcs.length) srcs[srcs.length - 1].addEventListener("error", function () { video.remove(); });
-  }
 
   if (!token) { showMessage("This page needs your personal link.", "Check the link you were sent.", "Each client gets their own link from Tomás. If yours isn't working, reply to his message and he'll send a fresh one."); return; }
   fetch(API + "?t=" + encodeURIComponent(token))

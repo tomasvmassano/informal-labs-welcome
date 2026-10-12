@@ -10,6 +10,7 @@
   --black: #000000;
   --cream: #fff7ee;
   --muted: #8f877e;
+  --faint: #4a443e;
   --line: #2b2723;
   --line-strong: #5a534c;
   --error: #f2b8a2;
@@ -17,110 +18,105 @@
   --accent: "Stix General", Georgia, serif;
   --body: "Satoshi", "Helvetica Neue", Arial, sans-serif;
   --ui: "Plus Jakarta", "Helvetica Neue", Arial, sans-serif;
-  --gutter: clamp(20px, 6vw, 96px);
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
+html, body { margin: 0; min-height: 100%; }
 body {
   background: var(--black);
   color: var(--cream);
   font-family: var(--body);
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-/* Background motion: sits behind everything, heavily veiled so text always wins */
-.bg { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.6s ease; z-index: 0; }
-.bg.is-ready { opacity: 1; }
-.veil { position: fixed; inset: 0; z-index: 1; background: linear-gradient(90deg, rgba(0,0,0,.92) 0%, rgba(0,0,0,.78) 55%, rgba(0,0,0,.55) 100%); transition: background 1s ease; }
-body.is-quiet .veil { background: rgba(0,0,0,.9); }
+/* Thin progress line pinned to the very top, logo sits under it */
+.top { position: fixed; top: 0; left: 0; right: 0; z-index: 3; }
+.progress { height: 2px; background: var(--line); }
+.progress span { display: block; height: 100%; width: 0; background: var(--cream); transition: width .5s cubic-bezier(.2,.7,.2,1); }
+.logo { display: block; height: 13px; width: auto; margin: 22px 28px 0; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; z-index: 3; padding: 28px var(--gutter) 0; }
-.logo { display: block; height: 20px; width: auto; }
-.progress { margin-top: 22px; height: 1px; background: var(--line); }
-.progress span { display: block; height: 100%; width: 0; background: var(--cream); transition: width .6s cubic-bezier(.2,.7,.2,1); }
+main { position: relative; z-index: 2; min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 96px 24px 72px; }
 
-main { position: relative; z-index: 2; min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; padding: 120px var(--gutter) 80px; }
+.screen { display: none; width: 100%; max-width: 560px; }
+.screen.is-active { display: block; animation: rise .45s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-.screen { display: none; width: 100%; max-width: 980px; }
-.screen.is-active { display: block; animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
-@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+h1, h2 { font-family: var(--display); font-weight: 500; margin: 0; letter-spacing: -0.005em; }
+h1 { font-size: 34px; line-height: 1.1; }
+h2 { font-size: 22px; line-height: 1.3; }
+.italic { display: block; font-family: var(--accent); font-style: italic; font-weight: 400; color: var(--muted); }
+h1 .italic { font-size: 22px; line-height: 1.3; margin-top: 4px; }
+h2 .italic { font-size: 18px; line-height: 1.35; margin-top: 4px; }
 
-h1, h2 { font-family: var(--display); font-weight: 500; margin: 0; letter-spacing: -0.01em; }
-h1 { font-size: clamp(56px, 11vw, 168px); line-height: .9; }
-h2 { font-size: clamp(36px, 6vw, 84px); line-height: .98; max-width: 16ch; }
-.italic { display: block; font-family: var(--accent); font-style: italic; font-weight: 400; letter-spacing: 0; }
-h1 .italic { font-size: .62em; line-height: 1.05; margin-top: .18em; }
-h2 .italic { font-size: .8em; line-height: 1.1; margin-top: .1em; }
-
-.lede { font-size: clamp(18px, 1.6vw, 21px); max-width: 52ch; margin: 28px 0 0; }
+.count { font-family: var(--ui); font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+.lede { font-size: 15px; color: #cfc6bc; max-width: 46ch; margin: 16px 0 0; }
 .muted { color: var(--muted); }
-.hint { font-family: var(--ui); font-size: 14px; color: var(--muted); margin: 14px 0 0; }
+.hint { font-family: var(--ui); font-size: 13px; color: var(--muted); margin: 6px 0 0; }
 
-/* Answer field: one big underlined line */
-.field { margin-top: 44px; max-width: 760px; }
-.field + .field { margin-top: 28px; }
-.field label { display: block; font-family: var(--ui); font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+/* Answer field: one underlined line */
+.field { margin-top: 28px; }
+.field + .field { margin-top: 10px; }
+.field label { display: block; font-family: var(--ui); font-size: 12px; color: var(--muted); margin-bottom: 2px; }
 .field input, .field textarea {
   width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--line-strong);
-  color: var(--cream); font-family: var(--display); font-weight: 400; font-size: clamp(26px, 3.4vw, 44px);
-  line-height: 1.2; padding: 8px 0 12px; border-radius: 0; outline: none; resize: none;
+  color: var(--cream); font-family: var(--body); font-weight: 400; font-size: 20px;
+  line-height: 1.35; padding: 6px 0 8px; border-radius: 0; outline: none; resize: none;
 }
-.field textarea { font-family: var(--body); font-size: clamp(20px, 2vw, 26px); line-height: 1.45; min-height: 3.2em; }
-.field input::placeholder, .field textarea::placeholder { color: #4a443e; }
+.field textarea { font-size: 17px; line-height: 1.5; min-height: 3.4em; }
+.field input::placeholder, .field textarea::placeholder { color: var(--faint); }
 .field input:focus, .field textarea:focus { border-bottom-color: var(--cream); }
 .field.has-error input, .field.has-error textarea { border-bottom-color: var(--error); }
-.error { font-family: var(--ui); font-size: 14px; color: var(--error); margin: 10px 0 0; min-height: 1.2em; }
+.error { font-family: var(--ui); font-size: 12px; color: var(--error); margin: 6px 0 0; min-height: 1.2em; }
 
-.actions { display: flex; align-items: center; gap: 22px; margin-top: 40px; flex-wrap: wrap; }
+.actions { display: flex; align-items: center; gap: 14px; margin-top: 20px; flex-wrap: wrap; }
 .btn {
-  font-family: var(--ui); font-weight: 500; font-size: 16px; letter-spacing: .01em;
+  font-family: var(--ui); font-weight: 500; font-size: 14px;
   background: var(--cream); color: var(--black); border: 1px solid var(--cream);
-  padding: 15px 28px; border-radius: 999px; cursor: pointer; transition: background .2s, color .2s;
+  padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: opacity .15s;
 }
-.btn:hover { background: transparent; color: var(--cream); }
+.btn:hover { opacity: .85; }
 .btn[disabled] { opacity: .5; cursor: wait; }
-.link { font-family: var(--ui); font-size: 15px; color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+.link { font-family: var(--ui); font-size: 13px; color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .link:hover { color: var(--cream); }
-.keys { font-family: var(--ui); font-size: 13px; color: var(--muted); }
-.keys kbd { font-family: inherit; border: 1px solid var(--line-strong); border-radius: 4px; padding: 1px 6px; }
+.keys { font-family: var(--ui); font-size: 12px; color: var(--muted); }
+.keys kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; }
 
-:focus-visible { outline: 2px solid var(--cream); outline-offset: 4px; }
+:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
 .field input:focus-visible, .field textarea:focus-visible { outline: none; }
 
-/* What happens next: a real sequence, so it is numbered */
-.timeline { list-style: none; margin: 56px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); max-width: 1100px; }
-.timeline li { padding: 22px 24px 0 0; position: relative; }
-.timeline li::before { content: ""; position: absolute; top: -4px; left: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--cream); }
-.timeline .when { font-family: var(--ui); font-size: 13px; color: var(--muted); }
-.timeline .what { font-family: var(--display); font-weight: 500; font-size: 26px; line-height: 1.05; margin: 6px 0 8px; }
-.timeline p { margin: 0; font-size: 15px; color: #cfc6bc; max-width: 26ch; }
+/* What happens next: a real sequence, so it is a vertical timeline */
+.timeline { list-style: none; margin: 32px 0 0; padding: 0 0 0 18px; border-left: 1px solid var(--line); }
+.timeline li { position: relative; padding: 0 0 20px; }
+.timeline li:last-child { padding-bottom: 0; }
+.timeline li::before { content: ""; position: absolute; top: 7px; left: -21px; width: 5px; height: 5px; border-radius: 50%; background: var(--cream); }
+.timeline .when { font-family: var(--ui); font-size: 12px; color: var(--muted); }
+.timeline .what { font-family: var(--display); font-weight: 500; font-size: 16px; line-height: 1.3; margin: 1px 0 2px; }
+.timeline p { margin: 0; font-size: 14px; color: #cfc6bc; }
 
-.booking { margin-top: 72px; max-width: 1100px; }
-.booking h3 { font-family: var(--display); font-weight: 500; font-size: clamp(30px, 4vw, 52px); margin: 0; line-height: 1; }
-.booking .frame { margin-top: 24px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #000; }
+.booking { margin-top: 44px; }
+.booking h3 { font-family: var(--display); font-weight: 500; font-size: 20px; margin: 0; line-height: 1.3; }
+.booking .frame { margin-top: 16px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #000; }
 /* Google's booking page has no dark mode; invert it so it sits inside an all-black page */
-.booking iframe { display: block; width: 100%; height: 720px; border: 0; filter: invert(.92) hue-rotate(180deg); background: #fff; }
+.booking iframe { display: block; width: 100%; height: 700px; border: 0; filter: invert(.92) hue-rotate(180deg); background: #fff; }
 
-.screen.is-wide { max-width: 1100px; }
+.screen.is-wide { max-width: 720px; }
 body.is-final main { align-items: flex-start; }
 
-@media (max-width: 760px) {
-  body { font-size: 17px; }
-  .top { padding-top: 20px; }
-  main { padding-top: 100px; }
-  .timeline { grid-template-columns: 1fr; border-top: 0; border-left: 1px solid var(--line); }
-  .timeline li { padding: 0 0 28px 22px; }
-  .timeline li::before { top: 8px; left: -4px; }
+@media (max-width: 600px) {
+  .logo { margin: 18px 20px 0; }
+  main { padding: 84px 20px 56px; align-items: flex-start; }
+  h1 { font-size: 28px; }
+  h1 .italic { font-size: 19px; }
+  h2 { font-size: 20px; }
+  .field input { font-size: 18px; }
   .booking iframe { height: 860px; }
   .keys { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .screen.is-active { animation: none; }
-  .bg { display: none; }
-  .progress span, .veil { transition: none; }
+  .progress span { transition: none; }
 }

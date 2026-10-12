@@ -11,27 +11,29 @@
   [hidden] { display: none !important; }
   main { align-items: flex-start; }
   .screen { display: block; }
-  .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; max-width: 1000px; }
-  .row .field { margin-top: 32px; }
-  .field input { font-size: 26px; }
-  .result { margin-top: 36px; max-width: 900px; border-top: 1px solid var(--line); padding-top: 24px; display: none; }
+  .wrap { width: 100%; max-width: 760px; }
+  .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .row .field { margin-top: 20px; }
+  .field input { font-size: 16px; }
+  h2 { margin-bottom: 4px; }
+  .result { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 24px; display: none; }
   .result.is-on { display: block; }
-  .url { font-family: var(--ui); font-size: 16px; word-break: break-all; margin: 8px 0 16px; }
-  .message { white-space: pre-wrap; font-size: 16px; color: #cfc6bc; border-left: 1px solid var(--line-strong); padding-left: 16px; margin: 8px 0 16px; max-width: 60ch; }
-  table { width: 100%; max-width: 1000px; border-collapse: collapse; margin-top: 18px; font-family: var(--ui); font-size: 14px; }
+  .url { font-family: var(--ui); font-size: 14px; word-break: break-all; margin: 8px 0 16px; }
+  .message { white-space: pre-wrap; font-size: 14px; color: #cfc6bc; border-left: 1px solid var(--line-strong); padding-left: 16px; margin: 8px 0 16px; max-width: 60ch; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; font-family: var(--ui); font-size: 13px; }
   th { text-align: left; font-weight: 500; color: var(--muted); padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); }
   td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
   .state-used { color: var(--cream); }
   .state-waiting, .state-opened { color: var(--muted); }
   .state-expired { color: var(--error); }
-  section + section { margin-top: 72px; }
+  section + section { margin-top: 56px; }
   @media (max-width: 760px) { .row { grid-template-columns: 1fr; gap: 0; } table { font-size: 13px; } .hide-sm { display: none; } }
 </style>
 </head>
 <body class="is-quiet">
 <header class="top"><img src="logo.png" alt="Informal Labs" class="logo" width="160" height="22"></header>
 <main>
-  <div style="width:100%">
+  <div class="wrap">
     <section class="screen" id="login">
       <h2>Client links<span class="italic">Only for the Informal Labs team.</span></h2>
       <div class="field"><label for="key">Admin key</label><input id="key" type="password" autocomplete="current-password"></div>
