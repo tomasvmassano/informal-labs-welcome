@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Welcome to Informal Labs</title>
+<link rel="preload" href="fonts/Degular-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/STIXGeneralItalic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<video id="bg" class="bg" autoplay muted loop playsinline preload="auto" poster="media/hero.jpg" aria-hidden="true">
+  <source src="media/hero.mp4" type="video/mp4">
+  <source src="media/hero.webm" type="video/webm">
+</video>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="top">
+  <img src="logo.png" alt="Informal Labs" class="logo" width="160" height="22">
+  <div class="progress" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bar"></span></div>
+</header>
+
+<main id="app" aria-live="polite">
+  <section class="screen is-active" data-screen="loading">
+    <p class="lede muted">One moment.</p>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

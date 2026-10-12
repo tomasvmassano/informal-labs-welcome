@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Client links</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+<style>
+  [hidden] { display: none !important; }
+  main { align-items: flex-start; }
+  .screen { display: block; }
+  .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; max-width: 1000px; }
+  .row .field { margin-top: 32px; }
+  .field input { font-size: 26px; }
+  .result { margin-top: 36px; max-width: 900px; border-top: 1px solid var(--line); padding-top: 24px; display: none; }
+  .result.is-on { display: block; }
+  .url { font-family: var(--ui); font-size: 16px; word-break: break-all; margin: 8px 0 16px; }
+  .message { white-space: pre-wrap; font-size: 16px; color: #cfc6bc; border-left: 1px solid var(--line-strong); padding-left: 16px; margin: 8px 0 16px; max-width: 60ch; }
+  table { width: 100%; max-width: 1000px; border-collapse: collapse; margin-top: 18px; font-family: var(--ui); font-size: 14px; }
+  th { text-align: left; font-weight: 500; color: var(--muted); padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); }
+  td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .state-used { color: var(--cream); }
+  .state-waiting, .state-opened { color: var(--muted); }
+  .state-expired { color: var(--error); }
+  section + section { margin-top: 72px; }
+  @media (max-width: 760px) { .row { grid-template-columns: 1fr; gap: 0; } table { font-size: 13px; } .hide-sm { display: none; } }
+</style>
+</head>
+<body class="is-quiet">
+<header class="top"><img src="logo.png" alt="Informal Labs" class="logo" width="160" height="22"></header>
+<main>
+  <div style="width:100%">
+    <section class="screen" id="login">
+      <h2>Client links<span class="italic">Only for the Informal Labs team.</span></h2>
+      <div class="field"><label for="key">Admin key</label><input id="key" type="password" autocomplete="current-password"></div>
+      <p class="error" id="keyerr" role="alert"></p>
+      <div class="actions"><button class="btn" id="unlock" type="button">Open</button></div>
+    </section>
+
+    <div id="tools" hidden>
+      <section class="screen">
+        <h2>New client link</h2>
+        <p class="hint">Each link works once and lasts 30 days. Anything you fill in here is pre-filled for the client, who can still change it.</p>
+        <div class="row">
+          <div class="field"><label for="company">Company</label><input id="company" placeholder="Lumen Coffee"></div>
+          <div class="field"><label for="first_name">First name</label><input id="first_name" placeholder="Sofia"></div>
+          <div class="field"><label for="email">Email</label><input id="email" type="email" placeholder="sofia@lumen.com"></div>
+        </div>
+        <p class="error" id="createerr" role="alert"></p>
+        <div class="actions"><button class="btn" id="create" type="button">Create link</button></div>
+        <div class="result" id="result">
+          <p class="hint">Their link</p>
+          <p class="url" id="url"></p>
+          <div class="actions" style="margin-top:0"><button class="btn" id="copyurl" type="button">Copy link</button><button class="link" id="copymsg" type="button">Copy link with message</button><span class="hint" id="copied" style="margin:0"></span></div>
+          <p class="hint" style="margin-top:22px">Message</p>
+          <p class="message" id="msg"></p>
+        </div>
+      </section>
+      <section class="screen">
+        <h2>Recent links</h2>
+        <table><thead><tr><th>Company</th><th class="hide-sm">Email</th><th>Created</th><th>Status</th></tr></thead><tbody id="list"></tbody></table>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+(function () {
+  var API = "https://nxkrzbxlizqtecxgurxu.supabase.co/functions/v1/onboarding";
+  var base = location.origin + "/";
+  var key = "";
+  try { key = localStorage.getItem("il_admin_key") || ""; } catch (e) {}
+  var $ = function (id) { return document.getElementById(id); };
+  function post(body) { return fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(function (r) { return r.json(); }); }
+  function fmt(d) { return d ? new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : ""; }
+  function esc(s) { return String(s || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  function load() {
+    return post({ action: "list", admin_key: key }).then(function (j) {
+      if (!j.ok) throw new Error("unauthorized");
+      $("list").innerHTML = j.invites.map(function (i) {
+        var state = i.used_at ? ["used", "Submitted " + fmt(i.used_at)] : new Date(i.expires_at) < new Date() ? ["expired", "Expired"] : i.opened_at ? ["opened", "Opened, not sent"] : ["waiting", "Not opened yet"];
+        return "<tr><td>" + esc(i.company || "No name") + "</td><td class=\"hide-sm\">" + esc(i.email) + "</td><td>" + fmt(i.created_at) + "</td><td class=\"state-" + state[0] + "\">" + state[1] + "</td></tr>";
+      }).join("") || "<tr><td colspan=\"4\" class=\"muted\">No links yet. Create the first one above.</td></tr>";
+    });
+  }
+  function unlock() {
+    key = $("key").value.trim() || key;
+    load().then(function () {
+      try { localStorage.setItem("il_admin_key", key); } catch (e) {}
+      $("login").hidden = true; $("tools").hidden = false; $("company").focus();
+    }).catch(function () { $("keyerr").textContent = "That key didn't work. Check it and try again."; $("login").hidden = false; });
+  }
+  $("unlock").addEventListener("click", unlock);
+  $("key").addEventListener("keydown", function (e) { if (e.key === "Enter") unlock(); });
+  if (key) unlock();
+
+  $("create").addEventListener("click", function () {
+    var btn = $("create"); btn.disabled = true; $("createerr").textContent = "";
+    post({ action: "create", admin_key: key, company: $("company").value, first_name: $("first_name").value, email: $("email").value })
+      .then(function (j) {
+        btn.disabled = false;
+        if (!j.ok) { $("createerr").textContent = "Couldn't create the link. Try again."; return; }
+        var url = base + "?t=" + j.token;
+        var name = $("first_name").value.trim();
+        $("url").textContent = url;
+        $("msg").textContent = "Hey" + (name ? " " + name : "") + ",\n\nSo happy to be starting this together. Here's your personal welcome page, it takes about two minutes and sets everything up on our side:\n\n" + url + "\n\nOnce you're done you can book our kickoff call right there.\n\nTalk soon,\nTomás";
+        $("result").classList.add("is-on");
+        ["company", "first_name", "email"].forEach(function (id) { $(id).value = ""; });
+        load();
+      }).catch(function () { btn.disabled = false; $("createerr").textContent = "No connection. Try again."; });
+  });
+  function copy(text) { navigator.clipboard.writeText(text).then(function () { $("copied").textContent = "Copied"; setTimeout(function () { $("copied").textContent = ""; }, 1800); }); }
+  $("copyurl").addEventListener("click", function () { copy($("url").textContent); });
+  $("copymsg").addEventListener("click", function () { copy($("msg").textContent); });
+})();
+</script>
+</body>
+</html>
